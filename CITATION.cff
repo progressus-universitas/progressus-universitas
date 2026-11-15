@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Si usas o citas este juego, cita la referencia de abajo."
+type: software
+title: "Progressus Universitas"
+abstract: "Juego serio de estrategia y gestión para estudiantes universitarios, pensado para trabajar el juicio evaluativo: declarar criterios, decidir con ellos a la vista y leer al final la coherencia entre lo declarado y lo hecho."
+authors:
+  - family-names: "Gómez Ruiz"
+    given-names: "Miguel Ángel"
+    affiliation: "Universidad de Cádiz · Grupo de Investigación EVALfor"
+version: "1.1.1"
+date-released: "2026-11-15"
+url: "https://progressus-universitas.es"
+repository-code: "https://github.com/progressus-universitas/progressus-universitas"
+license: CC-BY-NC-ND-4.0
+keywords:
+  - juego serio
+  - evaluación
+  - juicio evaluativo
+  - alfabetización evaluadora
+  - educación superior
