@@ -26,7 +26,7 @@ El registro de procedencia de las piezas generadas con inteligencia artificial v
 
 ## Cómo citar
 
-Gómez Ruiz, M. Á. (2026). *Progressus Universitas* (Versión 1.1.1) [Videojuego]. https://progressus-universitas.es
+Gómez Ruiz, M. Á. (2026). *Progressus Universitas* (Versión 1.1.2) [Videojuego]. https://progressus-universitas.es
 
 El fichero `CITATION.cff` lleva la cita en formato legible por máquina. GitHub la muestra en «Cite this repository». El DOI de Zenodo se añadirá aquí cuando exista.
 

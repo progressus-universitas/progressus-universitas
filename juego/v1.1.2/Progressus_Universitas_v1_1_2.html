@@ -1101,6 +1101,10 @@
   .consejero.con-emblema .emblema{grid-row:1 / span 2;width:52px;height:52px;margin-top:2px}
   .consejero.con-emblema .emblema svg{width:52px;height:52px;display:block}
   .consejero.con-emblema b{display:block;margin:0 0 2px}
+  /* v1.1.2 (G17 S.5-ter · H734) · en la Asamblea el eco del origen caía en la columna del emblema y la ensanchaba a 577 px
+     con la frase en 88; todo hijo que no sea el emblema va a la segunda columna, y el emblema ocupa todas las filas */
+  .consejero.con-emblema > :not(.emblema){grid-column:2}
+  .consejero.con-emblema .emblema{grid-row:1 / span 9}
   @media (max-width:600px){.consejero.con-emblema .emblema,.consejero.con-emblema .emblema svg{width:40px;height:40px}}
   .eventbanner{font-family:var(--ui);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:#f2e6c9;
     background:var(--wax);border-radius:3px;padding:5px 11px;display:inline-block;margin-bottom:10px}
@@ -2068,6 +2072,9 @@
   .help-fig img{display:block;width:100%;height:auto;max-height:300px;object-fit:cover;border:1px solid var(--line);border-radius:4px}
   .help-fig.cuatro{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
   .help-fig.cuatro img{aspect-ratio:1/1;object-fit:cover}
+  /* v1.1.2 (G17 S.5-ter · H736) · sin imagen, cada figura suelta medía 2 px y al llegar saltaba hasta 300, empujando lo de debajo
+     298 px; con su alto fijo mide 300 antes y después, y a 360 la obra y el aula se recortan por el `object-fit:cover` que ya tenían */
+  .help-fig:not(.cuatro) img{height:300px}
   .help-fig.retrato{display:flex;justify-content:center}
   .help-sello{height:26px;width:auto;vertical-align:middle;margin:0 5px 0 1px}
   .help-sec img.ico{vertical-align:-4px;margin-right:5px}
@@ -5926,7 +5933,7 @@ function anclaCriterio(id){
   return (cual && cual.id===id) ? '<span class="tie"></span>' : '';
 }
 
-const PROTO_VERSION = "v1.1.1";
+const PROTO_VERSION = "v1.1.2";
 const SCALE = { stu:30, gold:25, mat:1 };
 /* Valores base (calibrados en v0.6, verificados): la escala se aplica sobre ELLOS. */
 const ECON_BASE = { cap:40, ideal:18, stipend:3, tuition:0.45, growth:0.13,
@@ -7030,19 +7037,22 @@ const ROSTROS = (function(){
     if(!p || !api.hay()) return "";
     return '<span class="' + clase + '" data-rostro="' + p + '" aria-hidden="true" style="background-image:url(&quot;' + api.url(p) + '&quot;)"></span>';
   };
+  /* v1.1.2 (G17 S.5-ter · H735) · el disco que reserva el sitio: siempre pintado, de pergamino hasta que llega el arte */
+  api.reserva = function(p, clase){
+    return '<span class="' + clase + '" data-rostro="' + p + '" aria-hidden="true"' + (api.hay() ? ' style="background-image:url(&quot;' + api.url(p) + '&quot;)"' : '') + '></span>';
+  };
   /* con arte, toda fila lleva tondo; sin pieza —no ocurre hoy— va de pergamino, y la columna no se descuadra */
   api.deFila = function(nombre){
     if(!api.hay()) return "";
     return api.html(api.pieza(nombre), "cl-tondo") || '<span class="cl-tondo" aria-hidden="true"></span>';
   };
-  /* el arte llega con la pantalla pintada: la presentación se repinta, y una ficción recibe su rostro sin repintar (H715) */
+  /* el arte llega con la pantalla pintada: los discos de la presentación reciben su imagen (H735), y una ficción su rostro, sin repintar (H715) */
   api.alLlegarElArte = function(){
     try{
       if(typeof state === "undefined" || !state || typeof app === "undefined" || !app) return;
-      if(state.phase === "intro"){
-        if(app.querySelector(".rostro")) return;
-        const entraba = !!app.querySelector(":scope > .stage.entra");
-        renderIntro(); if(entraba) stageEntra();
+      if(state.phase === "intro"){   /* v1.1.2 (H735) · hasta la v1.1.1 se repintaba, y los dos párrafos crecían 32 px */
+        app.querySelectorAll(".rostro[data-rostro]").forEach(function(r){
+          if(!r.style.backgroundImage) r.style.backgroundImage = 'url("' + api.url(r.getAttribute("data-rostro")) + '")'; });
         return;
       }
       if(state.phase !== "game" || (state.view !== "decision" && state.view !== "pressure")) return;
@@ -12573,7 +12583,7 @@ function openCredits(){
 function renderIntro(){
   /* v1.0.9 (G17 S.4-ter · d) · pregunta por el arte antes de pintarse; sin «assets/», la pantalla de siempre */
   plazaPideArte();
-  const rOnorato = ROSTROS.html("onorato", "rostro der"), rAnselmo = ROSTROS.html("anselmo", "rostro");
+  const rOnorato = ROSTROS.reserva("onorato", "rostro der"), rAnselmo = ROSTROS.reserva("anselmo", "rostro");   /* v1.1.2 (H735) */
   app.innerHTML =
   '<div class="stage">'+
     frontispiece()+

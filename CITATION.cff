@@ -7,7 +7,7 @@ authors:
   - family-names: "Gómez Ruiz"
     given-names: "Miguel Ángel"
     affiliation: "Universidad de Cádiz · Grupo de Investigación EVALfor"
-version: "1.1.1"
+version: "1.1.2"
 date-released: "2026-11-15"
 url: "https://progressus-universitas.es"
 repository-code: "https://github.com/progressus-universitas/progressus-universitas"
