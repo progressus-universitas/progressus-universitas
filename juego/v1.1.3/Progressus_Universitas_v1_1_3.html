@@ -5933,7 +5933,7 @@ function anclaCriterio(id){
   return (cual && cual.id===id) ? '<span class="tie"></span>' : '';
 }
 
-const PROTO_VERSION = "v1.1.2";
+const PROTO_VERSION = "v1.1.3";
 const SCALE = { stu:30, gold:25, mat:1 };
 /* Valores base (calibrados en v0.6, verificados): la escala se aplica sobre ELLOS. */
 const ECON_BASE = { cap:40, ideal:18, stipend:3, tuition:0.45, growth:0.13,
@@ -16496,6 +16496,80 @@ function barraAjustaAlto(){
   const h = Math.ceil(Math.max(rb.bottom, rp.bottom) - Math.min(rb.top, rp.top));
   if(h > 0) document.documentElement.style.setProperty("--barra-alto", h+"px");
 }
+/* ═══ v1.1.3 (G17 S.6-bis · H745 · H746 · H747 · H748) · LA BARRA SE AJUSTA SOLA, Y LOS DIBUJOS SIGUEN AL ANCHO ═══
+   EL DEFECTO lo vio la dirección en su teléfono el 19-11-2026 (OPPO Reno 14 5G, Chrome): la «i» de «Estudiantes 1.000» y el ▼
+   salían cortados. `var(--display)` pide Palatino y Android pone su serifa, más ancha; la barra sólo se había medido con la del
+   Chromium de trabajo, más estrecha (H745). Con cuatro letras, dieciséis anchos y dos juegos de cifras se vio además que de 640
+   a unos 690 px se salía con cualquier letra (H746), y que al girar el aparato nada repintaba los dibujos, que conservaban la
+   talla del ancho anterior: en la barra (H747) y fuera de ella, en la Guía, el cofre y la Lonja (H748). Las cifras, en §11 y
+   §16 de la Biblia.
+   LA CURA, decidida por la dirección el 19-11-2026: al pintarse la barra, al refrescar sus cifras y al cambiar de ancho, si algo
+   no cabe, la letra de las celdas y de las puertas baja en la misma proporción, de 1 % en 1 %, hasta que cabe, con suelo en el
+   60 %. La base son las tallas de la hoja —13, 12, 16 y 14,5 px—, que se leen y no se copian; donde todo cabe no se escribe nada
+   y la barra sale igual al píxel que en la v1.1.2. «Cabe»: cada celda dentro de su margen —el negativo de la celda, que la deja
+   a 3 px del borde en el teléfono (H697)—, lo pintado a 3 px o más del borde y cada puerta, el ▼ incluido, dentro de la barra.
+   No toca los nombres (A59), la «i» (A41), los 44 px del ▼ (C8), el orden, ningún texto, los iconos ni la regla de 12 px de
+   H697. EL ORDEN: después de colgar la barra, porque sin página no hay medida, y antes de `barraAjustaAlto` y de que `CIFRAS`
+   mida su capa. En jsdom la barra no tiene ancho y no se escribe nada: el banco prueba el mecanismo con una medida simulada
+   —por eso `barraSobra` recibe la proporción, que no usa— y la sesión mide la página en Chromium. Lo vigilan
+   `barra.se_ajusta_sola_al_pintar_al_refrescar_y_al_cambiar_de_ancho` y `dibujos.al_cambiar_de_ancho_llevan_la_talla_de_su_ancho`. */
+const BARRA_SUELO = 0.6;   /* el 60 % de la talla de hoy */
+const BARRA_AIRE = 3;      /* lo pintado, a 3 px o más del borde: el margen de H697 */
+var barraAnchoAjustado = null;   /* el ancho del último ajuste o del último cambio de ancho */
+/* cuánto se sale lo que más se sale, en píxeles; con la barra sin ancho —plegada, o sin página—, cero */
+function barraSobra(b, k){
+  if(!b || typeof b.getBoundingClientRect !== "function") return 0;
+  const rb = b.getBoundingClientRect();
+  if(!(rb.width > 0)) return 0;
+  const px = function(x){ const n = parseFloat(x); return isNaN(n) ? 0 : n; };
+  const inn = document.getElementById("barra-in") || b, ri = inn.getBoundingClientRect();
+  const borde = Math.min(window.innerWidth || rb.right, rb.right);
+  const dentro = Math.min(rb.right - px(getComputedStyle(b).paddingRight), ri.right - px(getComputedStyle(inn).paddingRight));
+  const visible = function(r){ return r.width > 0 || r.height > 0; };
+  let peor = -Infinity;
+  [].forEach.call(b.querySelectorAll(".cifra"), function(c){
+    const r = c.getBoundingClientRect(); if(!visible(r)) return;
+    peor = Math.max(peor, r.right - (dentro - px(getComputedStyle(c).marginRight)));
+    if(typeof document.createRange === "function"){
+      const g = document.createRange(); g.selectNodeContents(c);
+      if(typeof g.getBoundingClientRect === "function"){ const t = g.getBoundingClientRect(); if(visible(t)) peor = Math.max(peor, t.right - (borde - BARRA_AIRE)); }
+    }
+  });
+  [].forEach.call(b.querySelectorAll(".enl > *"), function(e){
+    const r = e.getBoundingClientRect(); if(visible(r)) peor = Math.max(peor, r.right - dentro);
+  });
+  return peor === -Infinity ? 0 : peor;
+}
+/* quita lo que escribió el ajuste anterior, lee la base y baja de 1 % en 1 % mientras algo se salga; devuelve la proporción */
+function barraAjustaLetra(){
+  const b = document.getElementById("barra");
+  if(!b) return 1;
+  const els = [].slice.call(b.querySelectorAll(".cifra, .enl button"));
+  els.forEach(function(e){ if(e.style.fontSize){ e.style.fontSize = ""; if(!e.getAttribute("style")) e.removeAttribute("style"); } });
+  barraAnchoAjustado = window.innerWidth;
+  let k = 1, base = null;
+  while(barraSobra(b, k) > 0 && k > BARRA_SUELO){
+    if(!base) base = els.map(function(e){ return parseFloat(getComputedStyle(e).fontSize); });
+    k = (Math.round(k * 100) - 1) / 100;
+    els.forEach(function(e, i){ if(base[i] > 0) e.style.fontSize = (base[i] * k) + "px"; });
+  }
+  [].forEach.call(b.querySelectorAll(".rueda-capa"), function(capa){   /* una capa que ya rodaba, sobre su cifra de ahora */
+    const v = capa.parentNode && capa.parentNode.querySelector(".val");
+    if(v){ capa.style.left = v.offsetLeft + "px"; capa.style.top = v.offsetTop + "px"; }
+  });
+  return k;
+}
+/* AL CAMBIAR DE ANCHO —girar el aparato lo es— los dibujos de TODA la página toman la talla de su ancho (H747 · H748) y la
+   barra, si la hay, se vuelve a ajustar: todo queda igual que pintado a ese ancho. No se repinta nada, que se llevaría el foco
+   y la capa de una cifra que rueda. Un «resize» sin cambio de ancho —la barra del navegador del teléfono al desplazar— no hace
+   nada. Se monta también sin `matchMedia`, para que el banco lo vea. */
+function barraCambiaDeAncho(){
+  if(window.innerWidth === barraAnchoAjustado) return;
+  barraAnchoAjustado = window.innerWidth;
+  barraPintaIconos(document);
+  if(document.getElementById("barra")){ barraAjustaLetra(); barraAjustaAlto(); }
+}
+try{ window.addEventListener("resize", barraCambiaDeAncho); }catch(e){}
 /* EL REFRESCO EN VIVO ESCRIBE POR LA MISMA PUERTA QUE EL PINTADO, y es la regla que B S.2 dejó escrita
    para el listón: sin esto, la barra diría las cifras del año en que se pintó la plaza y el reloj
    seguiría corriendo debajo. Se piden a `piezasDeLaBanda()`, que es de donde salen al pintar, de modo
@@ -16517,6 +16591,7 @@ function barraRefresca(){
     if(e.textContent !== txt) e.textContent = txt;
     e.classList.toggle("pos", bal.pos); e.classList.toggle("neg", !bal.pos);
   }
+  barraAjustaLetra();   /* v1.1.3 (H745) · las cifras nuevas pueden no caber, o volver a caber: antes de la capa y del alto */
   CIFRAS.refresca(b);   /* v1.0.9 (G17 S.4-ter · a) · el año no enciende nada: sólo anota lo que el listón dice ahora */
   barraAjustaAlto();
 }
@@ -16603,6 +16678,7 @@ function pintaBarra(){
      ya no son el motivo. El motivo de hoy son tres cosas que cuelgan de que viva en «#app»: sus doce
      dibujos, la puerta del foco del teclado y el refresco de sus cifras dentro de una sala.] */
   if(vieja) vieja.replaceWith(nueva); else document.getElementById("app").appendChild(nueva);
+  barraAjustaLetra();   /* v1.1.3 (H745) · ya colgada; antes del alto (`bindBarra`) y de la capa (`CIFRAS.pinta`) */
   bindBarra();
   CIFRAS.pinta(nueva);   /* v1.0.9 (G17 S.4-ter · a) · ya colgada: la capa se mide sobre la cifra pintada */
 }
@@ -21594,7 +21670,10 @@ function renderDebrief(){
       del fichero, que es lo que el jugador tiene que encontrar en su equipo y lo que la práctica le pide subir. El primero
       va en color pleno y los otros dos en fantasma: el registro completo es el que contiene a los otros dos (G16 S.2).
       EL TXT DEJA DE LLAMARSE «crónica en texto»: el fichero que compone `buildResearchTXT` se titula «REGISTRO DE PARTIDA»
-      y lleva el registro resumido, sin trazas, contexto, Lonja, cadenas, clima ni juicio. El rótulo de antes era inexacto.
+      y lleva el registro resumido con el clima final y el juicio del jugador, sin trazas, contexto, Lonja ni cadenas. El rótulo
+      de antes era inexacto. [19-11-2026 · G17 S.6-bis · H737: este comentario decía «sin trazas, contexto, Lonja, cadenas, clima
+      ni juicio», y `buildResearchTXT` escribe «CLIMA FINAL» y «EL JUICIO DEL JUGADOR SOBRE SU PARTIDA» desde la v1.0.4. La
+      Biblia se corrigió en §12 en la v5.159; el comentario, la primera vez que se abre el juego, por decisión de la dirección.]
       EL AVISO DE E S.5 PIERDE «en el formato que prefieras», confirmado por la dirección al abrir la sesión (A): el formato
       lo dice ya cada botón. Sigue SIN NEGRITAS, que es la regla de E S.5 escrita arriba. Y EL NOMBRE NO SE ESCRIBE DOS VECES:
       las tres constantes de abajo son las que se pintan y las que recibe `triggerDownload`. */
