@@ -16530,10 +16530,16 @@ function barraSobra(b, k){
   [].forEach.call(b.querySelectorAll(".cifra"), function(c){
     const r = c.getBoundingClientRect(); if(!visible(r)) return;
     peor = Math.max(peor, r.right - (dentro - px(getComputedStyle(c).marginRight)));
-    if(typeof document.createRange === "function"){
-      const g = document.createRange(); g.selectNodeContents(c);
-      if(typeof g.getBoundingClientRect === "function"){ const t = g.getBoundingClientRect(); if(visible(t)) peor = Math.max(peor, t.right - (borde - BARRA_AIRE)); }
-    }
+    /* lo pintado, hijo a hijo y SIN la capa de la cifra que rueda: es de paso y, si se gira el aparato mientras rueda, sigue
+       donde la dejó el ancho anterior; contada, la letra bajaba de más hasta el siguiente tic (H745, revisión de la preparación) */
+    [].forEach.call(c.childNodes, function(n){
+      let t = null;
+      if(n.nodeType === 1){ if(!n.classList.contains("rueda-capa")) t = n.getBoundingClientRect(); }
+      else if(n.nodeType === 3 && typeof document.createRange === "function"){
+        const g = document.createRange(); g.selectNodeContents(n); if(typeof g.getBoundingClientRect === "function") t = g.getBoundingClientRect();
+      }
+      if(t && visible(t)) peor = Math.max(peor, t.right - (borde - BARRA_AIRE));
+    });
   });
   [].forEach.call(b.querySelectorAll(".enl > *"), function(e){
     const r = e.getBoundingClientRect(); if(visible(r)) peor = Math.max(peor, r.right - dentro);
