@@ -4,12 +4,21 @@
 
 Vas a fundar una universidad en el año 1600 y a gestionarla durante medio siglo. Antes de empezar ordenas tus cinco criterios: ese orden es tu visión. Al final verás si tus decisiones fueron coherentes con lo que declaraste. No hay una única forma de acertar: hay coherencia, o no la hay.
 
-- **Jugar:** https://progressus-universitas.github.io/progressus-universitas/
+- **Sitio oficial:** https://progressus-universitas.es
+- **Jugar:** https://progressus-universitas.es/juego/v1.1.3/
+- **Respaldo del juego en GitHub:** https://progressus-universitas.github.io/progressus-universitas/
 - **Vídeo de presentación (57 s):** https://www.youtube.com/watch?v=lHGK2Rl5tpo
 
 ## Qué hay en este repositorio
 
-El juego, una carpeta por versión: `juego/vX.Y.Z/`, con sus piezas en `assets/`. El registro de procedencia de las piezas generadas con inteligencia artificial va dentro, en `assets/metodo/`. El `index.html` de la raíz es una portada provisional que lleva al juego.
+El juego, una carpeta por versión: `juego/vX.Y.Z/`, con sus piezas en `assets/`. El registro de procedencia de las piezas generadas con inteligencia artificial va dentro, en `assets/metodo/`. El `index.html` de la raíz es una portada mínima que lleva al juego.
+
+Cada versión publicada tiene su release. Lleva la copia completa del juego en un único fichero HTML, que sirve para jugar sin conexión. Lleva también las huellas SHA-256 de lo publicado.
+
+## Documentación
+
+- *Progressus Universitas: Guía del juego*. https://doi.org/10.5281/zenodo.24310029
+- *Progressus Universitas: Documento de diseño*. https://doi.org/10.5281/zenodo.24310068
 
 ## Cómo citar
 
